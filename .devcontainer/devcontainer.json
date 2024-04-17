@@ -1,0 +1,16 @@
+{
+  "name": "Python Dev Container",
+  "dockerFile": "../Dockerfile",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "ms-python.python"
+  ],
+  "forwardPorts": [8000],
+  "mounts": [
+    "source=/path/to/your/repository,target=/workspace,type=bind,consistency=cached"
+  ],
+  "remoteUser": "vscode"
+}
+
