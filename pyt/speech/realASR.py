@@ -5,16 +5,11 @@
 """
 :brief: Simplistic script to run real speech
 
-Simplify littleASR.py to the bare minimal. Intended for real language speech
-(conversation, audiobooks, etc... no synthetic sentences)
-
-Default config for
-
 https://huggingface.co/datasets/vpuente/perezGaldos
 
 """
 
-FILECACHELIMIT = 10000 # This requires a very big SWAPFILE No performance impact. 15GB for 10K. Better options exist.
+FILECACHELIMIT = 10000 # This requires a very big SWAPFILE but littl to no performance impact. 15GB for 10K. Better options exist.
 
 import re
 import librosa
@@ -54,7 +49,7 @@ class dataSetCfg:
             if os.uname()[0] == "Darwin":
                 self.dir  = "/Users/vpuente/Documents/Code/cortexsim/dat/kaggleds"
             else:
-                self.dir  = "/afs/atc.unican.es/u/v/vpuente/lustre/KAGGLE"
+                self.dir  = "./dat"
             self.file = "transcript.txt"
             self.rexp = "(.*wav)\|(.*)\|(.*)" #dir/file | speech | time
             self.maxs = 10 # max Sentence
@@ -224,7 +219,6 @@ class corpus:
             self.__idx = self.__seqGen.randint(minW,maxW)
         else:
             self.__idx = max((self.__idx + 1) % (maxW + 1), minW)
-            print ("M%s m%s i%s" % (maxW,minW,self.__idx))
 
         self.__wordStats.setdefault(self.__idx, 0)
         self.__wordStats[self.__idx] += 1
@@ -281,10 +275,6 @@ class corpus:
         if logLearning != None:
             logLearning.write("CORTEX LOOKS STABLE at %s cycles\n"% clock)
             return
-            for key in self.__wordStats:
-                logLearning.write("%s:%s\n" % (key, self.__wordStats[key]))
-            logLearning.flush()
-
 
     def current(self):
         return self.__idx
@@ -310,7 +300,6 @@ class CTXSim:
     __cyclesRun = 0
     __ctx_config = None
     __learn_log  = None
-    __on_validat = False
 
     __valInterInterval = 0
     __valSentences= 0
@@ -365,9 +354,6 @@ class CTXSim:
                                                 toReplace[u'm_outputDirectory']))
             self.__simulator.getCortex().pushMaxMinValToEncoders(CTXSwig.DoubleVector([1.0] * features),
                                                                  CTXSwig.DoubleVector([0.0] * features))
-            if os.environ.get('TRACE') is not '':
-                self.__enableDisableLog()
-                print("-->Logs are disabled")
 
         else:
             self.__rewriteJsonfile("%s/cfg.json" % config.cpt , toReplace)
@@ -376,9 +362,6 @@ class CTXSim:
                                             toReplace[u'm_outputDirectory'])))
             with open("%s/signal.json"% config.cpt) as cpt_signal: # Shouldn't change
                  speech.sigcf = sigPrCfg(json.load(cpt_signal))
-            #with open("%s/data.json"% config.cpt) as cpt_data: # Might change
-            #    speech.datas = dataSetCfg(json.load(cpt_data))
-            #fp.write(speech.toJSON())
             
         with open("%s/speech.json" % outpath, 'w') as fp:
             fp.write(json.dumps(speech, default=lambda o: o.__dict__,sort_keys=True, indent=4))
@@ -389,9 +372,6 @@ class CTXSim:
         self.__input = speech
         self.__voice = corpus(self.__input)
 
-        #if self.__input.datas.baLen != 0 :
-        #    self.__simulator.disableSWR()
-        
         if self.__valInterInterval != 0 and self.__input.datas.baLen == 0 :
             self. __warningValidationMsg()
             self.__simulator.disableFlightRecorder()
@@ -555,8 +535,6 @@ class CTXSim:
             self.__learn_log.write(" LEAVING VALIDATION PHASE ASE AT %s RECONTINUE AT %s\n" % (periods,curr) )
             self.__learn_log.flush()
 
-
-
     def showBar(self,percent):
         """
         ------------------------------------------------------------------------
@@ -597,16 +575,16 @@ def main(argv):
                                         "validation-samples", "validation-warmup"])
     except getopt.GetoptError:
         print('realASR.py [-0] [-t] [-v] [r] -o <outdir> [ -j <sim.json> | -k <chptdir> ] -c <cycles> -W <maxSent> \
-              -w <minSentence> -s <seed> -l <batch-length> -z <batch-slide> -i <batch-iterations,0 means adaptive> \
-              -f <batch-iterations-force, no 0 and no disable batch>\
-              -V <validation-interval> -L <<validation-senteces>  -M <validation-warmup> <>')
+-w <minSentence> -s <seed> -l <batch-length> -z <batch-slide> -i <batch-iterations,0 means adaptive> \
+-f <batch-iterations-force, no 0 and no disable batch>\
+-V <validation-interval> -L <<validation-senteces>  -M <validation-warmup> <>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
             print('realASR.py [-0] [-t] [-v] [-r] -o <outdir> [ -j <sim.json> | -k <chptdir> ] -c <cycles> -W <maxSent> \
-                  -w <minSentence> -s <seed> -l <batch-size> -z <batch-slide> -i <batch-iterations,0 means adaptive> \
-                  -f <batch-iterations-force, no 0 and no disable batch>\
-                  -V <validation-interval> -L <<validation-senteces>  -M <validation-warmup> <>')
+-w <minSentence> -s <seed> -l <batch-size> -z <batch-slide> -i <batch-iterations,0 means adaptive> \
+-f <batch-iterations-force, no 0 and no disable batch>\
+-V <validation-interval> -L <<validation-senteces>  -M <validation-warmup> <>')
             sys.exit()
         elif opt == '-t':
             sim.trace   = True

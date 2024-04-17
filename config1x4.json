@@ -14,7 +14,7 @@
         "m_useMersenne": true,
         "m_useMultithread": true,
         "m_dump_checkPointAt": 0,
-        "m_periodic_stats": 20000000,
+        "m_periodic_stats": 2000000,
         "m_outputDirectory": "lustreptr",
         "m_hyperegModelArray": [
             {
