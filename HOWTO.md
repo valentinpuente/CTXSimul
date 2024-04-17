@@ -57,6 +57,14 @@ python pyt/speech/realASR.py
 git clone https://huggingface.co/datasets/vpuente/perezGaldos
 ```
 
+There is a small set of eleven sentences included in the repo to run the cortex. Just run.
+
+```bash
+ python pyt/speech/realASR.py -j config1x4.json -c 1000000 -W "10"
+ ```
+
+
+
 ## Run the simulation in batch
 
 Run 8 samples per input size. All simulations are single-thead (requires 40 cores. Uses taskset to 
@@ -81,7 +89,7 @@ configuration shown in the paper (plus a single row cortex for testing).
 
 In principle, the input data set can be any audio set. Just adjust the configuration inside the Python launcher.
 
-# Using Github codespaces from ttps://github.com/puentev/ctxsimul
+# Using Github Codespaces from ttps://github.com/puentev/ctxsimul
 
-Alternatively the repository is preconfigured with a devcontainer already configured.
-Just launch a codespace and it should work.
+Alternatively, the repository comes with a pre-configured devcontainer.
+Just start a codespace and it should work.
