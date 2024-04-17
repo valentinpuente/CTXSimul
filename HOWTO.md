@@ -3,7 +3,7 @@
 
 No source code is provided at this time. Only the basic launcher Python script and the 
 swig wrapper to the binary (and the simulator binary). This is only a 
-"proof of life of the paper, not a tool to be used beyond that. Further down the line, the source
+"proof" of life of the paper, not a tool to be used beyond that. Further down the line, the source
 code of the simulator will be released.
 
 ## Setup a Docker Container 
@@ -57,13 +57,12 @@ python pyt/speech/realASR.py
 git clone https://huggingface.co/datasets/vpuente/perezGaldos
 ```
 
-There is a small set of eleven sentences included in the repo to run the cortex. Just run.
+There is a small set of eleven sentences included in the repo to run the cortex. No analysis scripts are
+provided a this time. Take a look inside "./test" to get the stats of the simulation.
 
 ```bash
  python pyt/speech/realASR.py -j config1x4.json -c 1000000 -W "10"
  ```
-
-
 
 ## Run the simulation in batch
 
