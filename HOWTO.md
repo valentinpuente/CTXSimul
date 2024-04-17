@@ -88,7 +88,7 @@ configuration shown in the paper (plus a single row cortex for testing).
 
 In principle, the input data set can be any audio set. Just adjust the configuration inside the Python launcher.
 
-# Using Github Codespaces from ttps://github.com/puentev/ctxsimul
+# Using Github Codespaces
 
 Alternatively, the repository comes with a pre-configured devcontainer.
-Just start a codespace and it should work.
+Just start a codespace and it should work from your web browser, using vscode terminal.
