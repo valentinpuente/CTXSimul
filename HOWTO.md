@@ -42,7 +42,7 @@ sudo docker build -t ctxsimdeb11 .
 Get the binaries of the CTXSimul and boilerplate with:
 
 ```bash
-git clone https://github.com/puentev/ctxsimul
+git clone [https://github.com/puentev/ctxsimul](https://github.com/valentinpuente/CTXSimul/)
 ```
 
 Get into the dir and check if can run 
