@@ -6,6 +6,18 @@ swig wrapper to the binary (and the simulator binary). This is only a
 "proof" of life of the paper, not a tool to be used beyond that. Further down the line, the source
 code of the simulator will be released.
 
+Paper is available in:
+
+@misc{varona2024architecture,
+      title={Architecture of a Cortex Inspired Hierarchical Event Recaller}, 
+      author={Valentin Puente Varona},
+      year={2024},
+      eprint={2405.02371},
+      archivePrefix={arXiv},
+      primaryClass={cs.NE}
+      url = {https://arxiv.org/abs/2405.02371},
+}
+
 ## Setup a Docker Container 
 
 The binary was built using a Debian11 system. This dockerfile provides a portable 
