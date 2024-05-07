@@ -8,6 +8,7 @@ code of the simulator will be released.
 
 Paper is available in:
 
+```
 @misc{varona2024architecture,
       title={Architecture of a Cortex Inspired Hierarchical Event Recaller}, 
       author={Valentin Puente Varona},
@@ -17,6 +18,7 @@ Paper is available in:
       primaryClass={cs.NE}
       url = {https://arxiv.org/abs/2405.02371},
 }
+```
 
 ## Setup a Docker Container 
 
