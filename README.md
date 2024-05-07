@@ -72,16 +72,16 @@ git clone https://huggingface.co/datasets/vpuente/perezGaldos
 ```
 
 There is a small set of eleven sentences included in the repo to run the cortex. No analysis scripts are
-provided a this time. Take a look inside "./test" to get the stats of the simulation.
+provided a this time. Take a look inside "./test" to get the stats of the simulation. -0 forces sequential 
+simulation.
 
 ```bash
- python pyt/speech/realASR.py -j config1x4.json -c 1000000 -W "10"
+ python pyt/speech/realASR.py -j config1x4.json -c 1000000 -W "10" -0
  ```
 
 ## Run the simulation in batch
 
-Run 8 samples per input size. All simulations are single-thead (requires 40 cores. Uses taskset to 
-minimize interference and avoid SMP).
+Run 8 samples per input size. All simulations are single-thred
 
 ```bash
 bash  ./pyt/batchReal.sh -j config1x4.json -W 500 -S "550 1000 2000 5000 10000"  -C 20000000000 -I 0 -R 8

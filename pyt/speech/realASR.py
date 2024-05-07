@@ -81,9 +81,6 @@ class simCfg:
             self.seed    = 137
             self.trace   = False
             self.sequent = False
-            self.vaInt   = 0 # Testing perdiodic interval (when testing is done) (Validation)
-            self.vaLen   = 5 # How many sentences are used in the testing        (Validation)
-            self.vaWarm  = 4 # warmup to let the cortex to settle down betore    (Validation)
         else:
             for key in data:
                 setattr(self, key, data[key])
@@ -105,9 +102,6 @@ class corpus:
     __bLen   = 0
     __bSlide = 0
     __bItera = 0
-
-    __validation_min = 0
-    __validation_max = 0
 
     __wordStats = {}
     __seqGen    = None
@@ -163,17 +157,6 @@ class corpus:
         if self.__maxidx  - self.__minidx > FILECACHELIMIT:
             self.__doCaching = False
 
-    def validationEnable(self, length):
-        self.__validation_min = self.__seqGen.randint(self.__minidx, self.__maxidx - length )
-        self.__validation_max = self.__validation_min + length - 1
-        self.__prevalIdx = self.__idx
-        return self.__validation_min,self.__validation_max, self.__idx
-    
-    def validationDisable(self):
-        self.__validation_min = 0
-        self.__validation_max = 0
-        return self.__idx
-
     def borderValidation(self, longi):
         return self.__idx + longi > self.__maxidx
 
@@ -210,12 +193,9 @@ class corpus:
         if self.__bLen != 0:
             maxW = min(self.__currMin + self.__bLen, self.__maxidx)
             minW = self.__currMin
-        elif self.__validation_max != self.__validation_min :
-            maxW = self.__validation_max
-            minW = self.__validation_min
         
         ##Advance word here
-        if self.__rng == True and self.__bLen == 0 and self.__validation_max == self.__validation_min :
+        if self.__rng == True and self.__bLen == 0 :
             self.__idx = self.__seqGen.randint(minW,maxW)
         else:
             self.__idx = max((self.__idx + 1) % (maxW + 1), minW)
@@ -313,16 +293,6 @@ class CTXSim:
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         signal.signal(signal.SIGUSR2, signal.SIG_IGN)
         signal.signal(signal.SIGINT,  signal.SIG_IGN)
-
-        self.__valInterInterval  = config.vaInt
-        self.__valSentences      = config.vaLen
-        self.__valWarmup         = config.vaWarm
-
-        if self.__valInterInterval != 0:
-            if self.__valSentences == 0 :
-                raise Exception("Zero sentences for validation")
-            if self.__valWarmup < 4:
-                print("Validation warmup too small")
 
         toReplace = {u'm_fileInputEncoder': "Undefined"}
         pre = "r" if speech.datas.rng == True else ""
@@ -467,17 +437,6 @@ class CTXSim:
                 ret[pos] = self.__replaceKey(ret[pos], keyrep, newValue)
         return ret
 
-    def __warningValidationMsg(self):
-        print(" \033[95m WARNING: VALIDATION IT IS A WIP [VALIDATION REQUIRES LEARNING WHICH\n\
-               ALTERS CORTEX. ONLY % OF LONG TERM STABLE CC MAY SUFFICE] \033[0m\n\
-               \n\
-               Still I don't known how to do avoid cortex alteration due to this\n\
-                \n\
-               The idea of validation is to run a limited input and see if perfect\n\
-               EOS are sufficient. PEOS is the best metric to get a good idea of the\n\
-               level of knowledge of the system, but can't be done in an open input\n\
-               stream. Requires repeating a small portion of it\n")
-
     def learn(self):
         """
         ------------------------------------------------------------------------
@@ -492,9 +451,6 @@ class CTXSim:
         self.__prev_perio = periods
         self.__simulator.setInputTag(self.__voice.current())
         pbands = self.__voice.currentPb()
-
-        if self.__valInterInterval != 0 and self.__input.datas.baLen  == 0 and isBeginPeriod == True :
-            self.__validation(periods)
 
         self.__voice.advance(isStable, 
                              self.__learn_log,
@@ -511,29 +467,12 @@ class CTXSim:
                 self.__voice.dumpStats(periods, self.__learn_log)
                 self.__voice.disableBatch(periods, self.__learn_log)
                 if self.__valInterInterval != 0 :
-                    self.__simulator.disableFlightRecorder() # We are doing internal validation
+                    self.__simulator.disableFlightRecorder()
                 self.__simulator.enableSWR()
 
 
         return len(pbands)
 
-    def __validation( self, periods):
-        if periods % self.__valInterInterval == 0 and self.__vali_start == 0:
-            init,end,curr = self.__voice.validationEnable(self.__valSentences)
-            self.__simulator.enableValidation()
-            self.__vali_start = periods
-            self.__learn_log.write(" ENTERING VALIDATION PHASE AT %s ITERATION: DOING FOR %s ITERATIONS WITH %s SENTENCES [%s .. %s] WHILE I WAS AT %s \n" %
-            (periods,self.__valInterInterval, self.__valWarmup + self.__valSamples, init, end,curr ))
-        elif (periods - self.__vali_start) ==  self.__valWarmup - self.__valSamples  and  self.__vali_start != 0:
-            ##ignore warmup to avoid cold start effects
-            self.__simulator.enableFlightRecorder()
-        elif (periods - self.__vali_start) ==  self.__valWarmup + self.__valSamples and self.__vali_start != 0 :
-            self.__simulator.disableFlightRecorder()
-            self.__simulator.disableValidation()
-            curr = self.__voice.validationDisable()   
-            self.__vali_start = 0
-            self.__learn_log.write(" LEAVING VALIDATION PHASE ASE AT %s RECONTINUE AT %s\n" % (periods,curr) )
-            self.__learn_log.flush()
 
     def showBar(self,percent):
         """
@@ -568,23 +507,20 @@ def main(argv):
     sim  = simCfg(None)
     inp  = inputCfg
     try:
-        opts,args = getopt.getopt(argv,"ht0vro:j:k:c:W:w:s:l:z:i:f:V:L:M:",
+        opts,args = getopt.getopt(argv,"ht0vro:j:k:c:W:w:s:l:z:i:f:",
                                        ["outputDir=","simCfg=","cpkt=","cycles=", 
                                         "maxSent=", "minSent=", "seed", "batch-lenght",
-                                        "batch-slide","batch-iterations", "batch-iterations-forced","validation-interval",
-                                        "validation-samples", "validation-warmup"])
+                                        "batch-slide","batch-iterations", "batch-iterations-forced"])
     except getopt.GetoptError:
         print('realASR.py [-0] [-t] [-v] [r] -o <outdir> [ -j <sim.json> | -k <chptdir> ] -c <cycles> -W <maxSent> \
 -w <minSentence> -s <seed> -l <batch-length> -z <batch-slide> -i <batch-iterations,0 means adaptive> \
--f <batch-iterations-force, no 0 and no disable batch>\
--V <validation-interval> -L <<validation-senteces>  -M <validation-warmup> <>')
+-f <batch-iterations-force, no 0 and no disable batch> <>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
             print('realASR.py [-0] [-t] [-v] [-r] -o <outdir> [ -j <sim.json> | -k <chptdir> ] -c <cycles> -W <maxSent> \
 -w <minSentence> -s <seed> -l <batch-size> -z <batch-slide> -i <batch-iterations,0 means adaptive> \
--f <batch-iterations-force, no 0 and no disable batch>\
--V <validation-interval> -L <<validation-senteces>  -M <validation-warmup> <>')
+-f <batch-iterations-force, no 0 and no disable batch>\<>')
             sys.exit()
         elif opt == '-t':
             sim.trace   = True
@@ -617,12 +553,6 @@ def main(argv):
             inp.datas.baItera = int(arg)
         elif opt in ("-f", "--batch-iter-forced"):
             inp.datas.baIteraForced = int(arg)            
-        elif opt in ("-V", "--validation-interval"):
-            sim.vaInt =  int(arg)
-        elif opt in ("-L", "--validation-samples"):
-            sim.vaLen = int(arg)
-        elif opt in ("-M", "--validation-warmup"):
-            sim.vaWarm = int(arg)
     run(sim,inp)
 
 if __name__ == "__main__":
